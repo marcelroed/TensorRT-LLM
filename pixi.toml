@@ -1,0 +1,56 @@
+[workspace]
+authors = ["Marcel Rød <mroed@nvidia.com>"]
+channels = ["conda-forge"]
+name = "TensorRT-LLM"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+
+
+[dependencies]
+# openmpi = ">=4.1.6,<4.2"
+openmpi = ">=5"
+python = "3.12.*"
+cuda-nvcc = ">=12.8,<12.9"
+debugpy = ">=1.8.15,<2"
+py-spy = "*"
+pixi-pycharm = ">=0.0.8,<0.0.9"
+cython = ">=3.1.2,<4"
+# rdma-core = "*"
+
+[pypi-dependencies]
+tensorrt_llm = { path = ".", editable = true }
+ty = ">=0.0.1a16"
+
+[activation.env]
+LD_LIBRARY_PATH = "$CONDA_PREFIX/lib"
+# TORCH_CUDA_ARCH_LIST = "10.0"
+
+TORCH_CUDA_ARCH_LIST = "8.9"  # Change depending on what arch you're running on
+
+# For UCX
+UCX_TLS = "tcp,self,shm"
+UCX_SOCKADDR_CM_ENABLE = "n"
+
+# For NCCL (if used)
+NCCL_IB_DISABLE = "1"
+NCCL_P2P_LEVEL = "SYS"
+
+# For MPI (OpenMPI)
+OMPI_MCA_btl = "self,tcp"
+OMPI_MCA_mtl = "^psm,psm2"
+
+# Only use one GPU
+CUDA_VISIBLE_DEVICES = "0"
+
+# TensorRT-LLM debugging
+TLLM_WORKER_USE_SINGLE_PROCESS = "1"
+# TLLM_LLM_ENABLE_DEBUG = "1"
+TLLM_LOG_LEVEL = "INFO"
+
+[pypi-options]
+# index-url = "https://pypi.org/simple"
+extra-index-urls = ["https://download.pytorch.org/whl/cu128"]
+index-strategy = "unsafe-best-match"

@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 
+from tensorrt_llm._torch.pyexecutor.resource_manager import ResourceManager
 from tensorrt_llm._utils import (customized_gc_thresholds, global_mpi_rank,
                                  is_trace_enabled, nvtx_range, trace_func)
 from tensorrt_llm.bindings.executor import (DisServingRequestStats,
@@ -185,7 +186,7 @@ class PyExecutor:
         self.is_warmup = False  # During warmup, we don't enable the profiler
 
         # related modules
-        self.resource_manager = resource_manager
+        self.resource_manager: ResourceManager = resource_manager
         self.scheduler = scheduler
         self.model_engine = model_engine
         self.enable_attention_dp = model_engine.enable_attention_dp
@@ -929,6 +930,8 @@ class PyExecutor:
                         # Return the first token to the client
                         self._handle_first_token_response(scheduled_batch)
 
+                    # Even though this computes the entire prefix cache in the first iteration, it only outputs
+                    # logits for the next token.
                     batch_outputs = self._forward_step(scheduled_batch)
 
                     sample_state = self._sample_async(scheduled_batch,
@@ -1675,6 +1678,7 @@ class PyExecutor:
                       batch_outputs) -> SampleState | None:
         try:
             if batch_outputs is not None:
+                assert isinstance(self.sampler, TorchSampler)
                 return self.sampler.sample_async(scheduled_batch, batch_outputs)
         except Exception as e:
             traceback.print_exc()
@@ -1695,6 +1699,7 @@ class PyExecutor:
     @nvtx_range("_update_requests")
     def _update_requests(self, sample_state: SampleState):
         try:
+            assert isinstance(self.sampler, TorchSampler)
             self.sampler.update_requests(sample_state)
         except Exception as e:
             traceback.print_exc()
