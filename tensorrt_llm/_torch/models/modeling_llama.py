@@ -685,6 +685,8 @@ class Llama4Model(DecoderModel):
 class LlamaModel(DecoderModel):
 
     def __init__(self, model_config: ModelConfig[LlamaConfig]):
+        model_config.pretrained_config.max_position_embeddings = 131200
+        # model_config = replace(model_config, pretrained_config=replace(model_config.pretrained_config, max_position=131200))
         super().__init__(model_config)
         config = self.model_config.pretrained_config
         self.padding_idx = config.pad_token_id
